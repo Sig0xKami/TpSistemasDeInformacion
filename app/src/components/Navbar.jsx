@@ -17,14 +17,21 @@ export default function Navbar() {
           </NavLink>
         </li>
         <li>
-          <NavLink 
-            to="/clientes" 
+          <NavLink
+            to="/polizas"
             className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
           >
-            Clientes (RF-01)
+            Pólizas
           </NavLink>
         </li>
-        {/* NUEVOS MODULOS / RUTAS AQUI */}
+        <li>
+          <NavLink
+            to="/conciliacion"
+            className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
+          >
+            Conciliación bancaria
+          </NavLink>
+        </li>
       </ul>
     </nav>
   )

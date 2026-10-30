@@ -11,6 +11,11 @@
   --danger-light: #fef2f2;
   --success: #10b981;
   --success-light: #ecfdf5;
+  --warning: #d97706;
+  --warning-light: #fffbeb;
+  --warning-border: #fde68a;
+  --neutral: #475569;
+  --neutral-light: #f1f5f9;
   --radius: 8px;
 }
 
@@ -121,12 +126,91 @@ body {
 .badge {
   display: inline-flex;
   align-items: center;
+  gap: 0.3rem;
   padding: 0.2rem 0.5rem;
   border-radius: 9999px;
   font-size: 0.75rem;
   font-weight: 600;
   background: var(--primary-light);
   color: var(--primary);
+  white-space: nowrap;
+}
+
+.badge-success {
+  background: var(--success-light);
+  color: var(--success);
+}
+
+.badge-warning {
+  background: var(--warning-light);
+  color: var(--warning);
+}
+
+.badge-danger {
+  background: var(--danger-light);
+  color: var(--danger);
+}
+
+.badge-neutral {
+  background: var(--neutral-light);
+  color: var(--neutral);
+}
+
+/* Warning / clarification banners */
+.banner-warning {
+  display: flex;
+  gap: 0.65rem;
+  align-items: flex-start;
+  background: var(--warning-light);
+  border: 1px solid var(--warning-border);
+  color: #92400e;
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius);
+  font-size: 0.85rem;
+  margin-bottom: 1rem;
+  line-height: 1.5;
+}
+
+.banner-warning strong {
+  color: #78350f;
+}
+
+.banner-danger {
+  background: var(--danger-light);
+  color: var(--danger);
+  padding: 0.65rem 1rem;
+  border-radius: var(--radius);
+  margin-bottom: 1rem;
+  font-size: 0.85rem;
+}
+
+.section-title {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+  margin-bottom: 0.75rem;
+}
+
+.btn-secondary {
+  background: var(--neutral-light);
+  color: var(--text-main);
+}
+
+.btn-secondary:hover {
+  background: #e2e8f0;
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.field-hint {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  margin-top: 0.2rem;
 }
 
 /* Forms */

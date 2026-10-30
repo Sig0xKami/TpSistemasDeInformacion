@@ -40,9 +40,7 @@ afecte directamente un RF puntual.
 
 ## Criterios de aceptación (Dado / Cuando / Entonces)
 
-Sección agregada al archivo de requerimientos (no forma parte del
-template de la skill) para no duplicar este contenido en un archivo
-aparte. Un criterio por ID de la tabla de arriba.
+Un criterio por ID de la tabla de arriba.
 
 **SIGA-101.** Escenario A: dado que la póliza 1001 está Al día y el
 archivo del banco del mes la muestra con la cuota acreditada, cuando
