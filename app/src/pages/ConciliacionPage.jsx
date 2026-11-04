@@ -10,15 +10,29 @@ function estadoBadgeClass(estado) {
 
 function aplicarReglaConciliacion(estadoActual, resultadoBanco) {
   if (estadoActual === 'Anulada') {
-    return { nuevoEstado: 'Anulada', regla: 'Regla 1' }
+    return { nuevoEstado: 'Anulada', regla: 'Regla 1', alerta: false }
+  }
+  if (resultadoBanco === 'No figura en el archivo') {
+    return { nuevoEstado: estadoActual, regla: 'Regla 6 (SIGA-109)', alerta: true }
   }
   if (estadoActual === 'Al día' && resultadoBanco === 'Cuota acreditada') {
-    return { nuevoEstado: 'Al día', regla: 'Regla 2' }
+    return { nuevoEstado: 'Al día', regla: 'Regla 2', alerta: false }
   }
   if (estadoActual === 'Al día' && resultadoBanco === 'Cuota rechazada') {
-    return { nuevoEstado: '1 cuota impaga', regla: 'Regla 3' }
+    return { nuevoEstado: '1 cuota impaga', regla: 'Regla 3', alerta: false }
   }
-  return { nuevoEstado: null, regla: 'Regla por defecto' }
+  if (estadoActual === '1 cuota impaga' && resultadoBanco === 'Cuota rechazada') {
+    return { nuevoEstado: '2 cuotas impagas', regla: 'Regla 4 (SIGA-109)', alerta: false }
+  }
+  if (estadoActual === '2 cuotas impagas' && resultadoBanco === 'Cuota rechazada') {
+    return {
+      nuevoEstado: 'Anulada',
+      regla: 'Regla 5 (SIGA-109)',
+      alerta: false,
+      motivoAnulacion: 'Falta de pago: 3ra cuota impaga consecutiva (SIGA-108/SIGA-109)',
+    }
+  }
+  return { nuevoEstado: null, regla: 'Regla por defecto', alerta: false }
 }
 
 export default function ConciliacionPage() {
@@ -58,20 +72,28 @@ export default function ConciliacionPage() {
       return
     }
 
-    const { nuevoEstado, regla } = aplicarReglaConciliacion(poliza.estado, resultado)
+    const { nuevoEstado, regla, alerta, motivoAnulacion } = aplicarReglaConciliacion(poliza.estado, resultado)
     const fecha = new Date().toISOString().split('T')[0]
+
+    const estadoResultante = alerta
+      ? `${poliza.estado} (alerta de revisión manual)`
+      : nuevoEstado ?? 'Sin cambio — pendiente de definición'
 
     const registro = {
       fecha,
       numero: poliza.numero,
       estadoAnterior: poliza.estado,
       resultadoBanco: resultado,
-      estadoResultante: nuevoEstado ?? 'Sin cambio — pendiente de definición',
+      estadoResultante,
       regla,
+      alerta,
     }
 
-    if (nuevoEstado) {
-      setPolizas(prev => prev.map(p => p.numero === poliza.numero ? { ...p, estado: nuevoEstado } : p))
+    if (nuevoEstado && !alerta && nuevoEstado !== poliza.estado) {
+      setPolizas(prev => prev.map(p => p.numero === poliza.numero
+        ? { ...p, estado: nuevoEstado, motivoAnulacion: motivoAnulacion ?? p.motivoAnulacion }
+        : p
+      ))
     }
 
     setHistorial(prev => [registro, ...prev])
@@ -88,18 +110,21 @@ export default function ConciliacionPage() {
               Actualiza el estado de pago de una póliza según el resultado del archivo del banco.
             </p>
           </div>
-          <span className="badge">SIGA-101</span>
+          <span className="badge">SIGA-101 · SIGA-108 · SIGA-109</span>
         </div>
 
         <div className="banner-warning">
           <span>⚠️</span>
           <div>
-            <strong>Pendiente de aclaración con el cliente (SIGA-101):</strong> el
+            <strong>Pendiente de aclaración con el cliente:</strong> el
             relevamiento no define el estado resultante cuando una póliza
-            tiene 1 o 2 cuotas impagas y recibe un nuevo resultado del banco,
-            ni cuando la póliza no figura en el archivo del mes. En esos
-            casos esta página no cambia el estado automáticamente — decisor:
-            H. Vidal.
+            con 1 o 2 cuotas impagas recibe una cuota <strong>acreditada</strong>
+            (¿vuelve a Al día?). Ese caso no cambia el estado automáticamente
+            — decisores: H. Vidal / Cobranzas. El resto de las transiciones
+            (1 cuota impaga + rechazo → 2 cuotas impagas; 2 cuotas impagas +
+            nuevo rechazo → Anulada; póliza ausente del archivo → mantiene
+            estado y genera alerta) ya están implementadas (SIGA-109, CR-01,
+            propuesto por el grupo, a confirmar por H. Vidal / Cobranzas).
           </div>
         </div>
 
