@@ -10,9 +10,28 @@ export const COBERTURAS = [
 
 const MEDIOS_PAGO = ['Débito automático', 'Transferencia', 'Pago presencial']
 
+export const TOPE_DESCUENTO_PCT = 15
+
+export const BONIFICACIONES = [
+  { key: 'debitoAutomatico', label: 'Débito automático', pct: 10 },
+  { key: 'otraPoliza', label: 'Otra póliza vigente', pct: 5 },
+  { key: 'antiguedad', label: 'Antigüedad mayor a 3 años', pct: 5 },
+]
+
 function calcularPremio(coberturaNombre) {
   const cobertura = COBERTURAS.find(c => c.nombre === coberturaNombre)
   return cobertura ? cobertura.premioBase : 0
+}
+
+export function aplicarTopeDescuentos(premioBase, bonificaciones) {
+  const sumaLineal = BONIFICACIONES.reduce(
+    (acc, b) => acc + (bonificaciones[b.key] ? b.pct : 0),
+    0
+  )
+  const descuentoPct = Math.min(sumaLineal, TOPE_DESCUENTO_PCT)
+  const descuento = Math.round((premioBase * descuentoPct) / 100)
+  const premioFinal = premioBase - descuento
+  return { descuentoPct, descuento, premioFinal }
 }
 
 function estadoBadgeClass(estado) {
@@ -28,6 +47,7 @@ const emptyForm = {
   cobertura: COBERTURAS[0].nombre,
   medioPago: MEDIOS_PAGO[0],
   domicilio: '',
+  bonificaciones: { debitoAutomatico: false, otraPoliza: false, antiguedad: false },
 }
 
 export default function PolizasPage() {
@@ -60,12 +80,22 @@ export default function PolizasPage() {
       return
     }
 
+    const premioBase = calcularPremio(formData.cobertura)
+    const { descuentoPct, descuento, premioFinal } = aplicarTopeDescuentos(
+      premioBase,
+      formData.bonificaciones
+    )
+
     const nuevaPoliza = {
       numero,
       asegurado: formData.asegurado.trim(),
       patente: formData.patente.trim().toUpperCase(),
       cobertura: formData.cobertura,
-      premio: calcularPremio(formData.cobertura),
+      premioBase,
+      bonificaciones: formData.bonificaciones,
+      descuentoPct,
+      descuento,
+      premio: premioFinal,
       medioPago: formData.medioPago,
       domicilio: formData.domicilio.trim(),
       estado: 'Al día',
@@ -128,20 +158,7 @@ export default function PolizasPage() {
               Emisión de pólizas, cálculo de premio, endosos y anulación.
             </p>
           </div>
-          <span className="badge">SIGA-102 · SIGA-106 · SIGA-107 · SIGA-108</span>
-        </div>
-
-        <div className="banner-warning">
-          <span>⚠️</span>
-          <div>
-            <strong>Pendiente de aclaración con el cliente (SIGA-103):</strong> los
-            descuentos del premio (débito automático, otra póliza, antigüedad)
-            están en conflicto entre H. Vidal (topeados) y J. Ponce (se suman
-            los tres) y no se conoce el tope. El premio que calcula esta
-            página es el <strong>premio base por cobertura</strong>, sin
-            aplicar ningún descuento, hasta que M. Duarte / H. Vidal definan
-            el criterio.
-          </div>
+          <span className="badge">SIGA-102 · SIGA-103 · SIGA-106 · SIGA-107 · SIGA-108</span>
         </div>
 
         {error && <div className="banner-danger">{error}</div>}
@@ -213,7 +230,35 @@ export default function PolizasPage() {
                 onChange={(e) => setFormData(prev => ({ ...prev, domicilio: e.target.value }))}
               />
             </div>
+            <div className="form-group">
+              <label className="form-label">Bonificaciones (SIGA-103, tope {TOPE_DESCUENTO_PCT}%)</label>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
+                {BONIFICACIONES.map(b => (
+                  <label key={b.key} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.9rem' }}>
+                    <input
+                      type="checkbox"
+                      checked={formData.bonificaciones[b.key]}
+                      onChange={(e) => setFormData(prev => ({
+                        ...prev,
+                        bonificaciones: { ...prev.bonificaciones, [b.key]: e.target.checked },
+                      }))}
+                    />
+                    {b.label} ({b.pct}%)
+                  </label>
+                ))}
+              </div>
+            </div>
           </div>
+          {(() => {
+            const premioBasePreview = calcularPremio(formData.cobertura)
+            const preview = aplicarTopeDescuentos(premioBasePreview, formData.bonificaciones)
+            return (
+              <p className="field-hint" style={{ marginBottom: '0.75rem' }}>
+                Premio base: ${premioBasePreview.toLocaleString('es-AR')} · Descuento: {preview.descuentoPct}%
+                (${preview.descuento.toLocaleString('es-AR')}) · Premio final: <strong>${preview.premioFinal.toLocaleString('es-AR')}</strong>
+              </p>
+            )
+          })()}
           <button type="submit" className="btn btn-primary">
             + Emitir póliza
           </button>
@@ -255,7 +300,14 @@ export default function PolizasPage() {
                       <td><code>{p.numero}</code></td>
                       <td><strong>{p.asegurado}</strong><br /><span className="field-hint">{p.patente}</span></td>
                       <td>{p.cobertura}</td>
-                      <td>${p.premio.toLocaleString('es-AR')}</td>
+                      <td>
+                        <strong>${p.premio.toLocaleString('es-AR')}</strong>
+                        {p.descuento > 0 && (
+                          <div className="field-hint">
+                            Base ${p.premioBase.toLocaleString('es-AR')} − {p.descuentoPct}% (${p.descuento.toLocaleString('es-AR')})
+                          </div>
+                        )}
+                      </td>
                       <td>{p.medioPago}</td>
                       <td>{p.domicilio}</td>
                       <td>

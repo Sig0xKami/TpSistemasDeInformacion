@@ -15,5 +15,8 @@ Solo specs/requirements.md. No cambia ningún requerimiento ni su ID/issue de Ji
 Refs: SIGA-101, SIGA-103, SIGA-104, SIGA-108
 
 
-#### Se corrigió 
-la tabla de requerimientos de la E2: los pendientes de decisión (SIGA-101, SIGA-103, SIGA-104 y SIGA-108) se separaron del enunciado y del criterio de verificación, y se registraron sin resolver con la marca [NEEDS CLARIFICATION] y su decisor. Se normalizó el formato de la columna Fuente. Cambio en el repositorio: PR "fix(specs): correcciones de la E2 en requirements.md".
+
+
+3. El sistema calcula el importe a cobrar sumando los descuentos aplicables (débito automático 10%, otra póliza vigente 5%, antigüedad mayor a 3 años 5%) con un tope acumulado del 15% sobre el premio base. (include: Calcular el premio)
+5b. El asegurado no paga al vencimiento: la póliza pasa a mora. Si la póliza está en 2 cuotas impagas y la conciliación registra un nuevo rechazo, pasa a Anulada por falta de pago.
+6a. Una póliza que no figura en el archivo del banco mantiene su estado actual y genera una alerta de revisión manual.
